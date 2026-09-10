@@ -1,8 +1,10 @@
 """Тесты для классов Product и Category."""
 
 import json
+
 import pytest
-from src.main import Product, Category, load_products_from_json
+
+from src.main import Category, Product, load_products_from_json
 
 
 @pytest.fixture(autouse=True)
@@ -62,7 +64,14 @@ class TestJsonLoader:
             {
                 "name": "Загрузка",
                 "description": "Тест загрузки",
-                "products": [{"name": "Товар", "description": "Опис", "price": 50.0, "quantity": 4}]
+                "products": [
+                    {
+                        "name": "Товар",
+                        "description": "Опис",
+                        "price": 50.0,
+                        "quantity": 4,
+                    }
+                ],
             }
         ]
         file_path = tmp_path / "test_products.json"

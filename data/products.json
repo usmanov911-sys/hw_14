@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Смартфоны",
+    "description": "Категория для смартфонов",
+    "products": [
+      {"name": "Samsung Galaxy S23", "description": "256GB, Серый", "price": 80000.0, "quantity": 5},
+      {"name": "iPhone 15", "description": "512GB, Black", "price": 110000.0, "quantity": 8}
+    ]
+  },
+  {
+    "name": "Ноутбуки",
+    "description": "Портативные компьютеры",
+    "products": [
+      {"name": "MacBook Pro 14", "description": "M3 Pro, 18GB", "price": 190000.0, "quantity": 3}
+    ]
+  }
+]

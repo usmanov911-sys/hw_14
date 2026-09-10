@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "hw-14-1"
 version = "0.1.0"
-description = "Ядро интернет-магазина"
-authors = ["Your Name <you@example.com>"]
+description = "Ядро интернет-магазина: Product и Category"
+authors = ["Artur <usmanov911@gmail.com>"]
 readme = "README.md"
 package-mode = false
 
@@ -15,7 +15,6 @@ pytest-cov = "^4.1"
 flake8 = "^6.1"
 black = "^23.9"
 isort = "^5.12"
-mypy = "^1.5"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
