@@ -7,14 +7,18 @@ from typing import List
 class Product:
     """Товар интернет-магазина."""
 
-    def __init__(self, name: str, description: str, price: float, quantity: int) -> None:
+    def __init__(
+        self, name: str, description: str, price: float, quantity: int
+    ) -> None:
         self.name = name
         self.description = description
         self.price = float(price)
         self.quantity = int(quantity)
 
     def __repr__(self) -> str:
-        return f"Product(name={self.name!r}, price={self.price}, quantity={self.quantity})"
+        return (
+            f"Product(name={self.name!r}, price={self.price}, quantity={self.quantity})"
+        )
 
 
 class Category:
