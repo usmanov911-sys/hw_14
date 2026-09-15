@@ -94,19 +94,13 @@ class Category:
         Category.product_count += 1
 
     @property
-    def products(self) -> List[Product]:
-        """Геттер списка товаров (возвращает список для обратной совместимости)."""
-        return self.__products
-
-    def get_products_string(self) -> str:
-        """Возвращает строковое представление списка товаров."""
+    def products(self) -> str:
+        """Геттер списка товаров в формате строки."""
         result = ""
         for product in self.__products:
             result += f"{product.name}, {product.price} руб. Остаток: {product.quantity} шт.\n"
         return result
 
-    def __repr__(self) -> str:
-        return f"Category(name={self.name!r}, products_count={len(self.__products)})"
 
 
 def load_products_from_json(file_path: str) -> List[Category]:

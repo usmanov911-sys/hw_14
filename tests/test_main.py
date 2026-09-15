@@ -23,7 +23,8 @@ class TestCategory:
         category = Category("Тестовая категория", "Описание категории", products)
         assert category.name == "Тестовая категория"
         assert category.description == "Описание категории"
-        assert len(category.products) == 1
+        # Обращаемся к приватному атрибуту через name mangling для проверки
+        assert len(category._Category__products) == 1
 
 
 class TestCounters:
@@ -64,12 +65,9 @@ class TestJsonLoader:
         assert len(categories) == 1
         assert isinstance(categories[0], Category)
         assert categories[0].name == "Загрузка"
-        assert len(categories[0].products) == 1
+        # Обращаемся к приватному атрибуту через name mangling
+        assert len(categories[0]._Category__products) == 1
 
-
-# ==========================================================
-# НОВЫЕ ТЕСТЫ ДЛЯ ДЗ 14.2 (ИНКАПСУЛЯЦИЯ)
-# ==========================================================
 
 class TestProductEncapsulation:
     """Тесты инкапсуляции класса Product (Задание 4)."""
@@ -100,7 +98,6 @@ class TestProductEncapsulation:
     def test_price_setter_accepts_positive(self, monkeypatch):
         """Сеттер принимает положительную цену."""
         product = Product("Тест", "Описание", 100.0, 5)
-        # Мокаем input, чтобы не было запроса подтверждения при повышении/понижении
         monkeypatch.setattr('builtins.input', lambda _: 'y')
         product.price = 200.0
         assert product.price == 200.0
@@ -120,8 +117,8 @@ class TestCategoryEncapsulation:
         category = Category("Тест", "Описание", [])
         product = Product("Товар", "Описание", 100.0, 5)
         category.add_product(product)
-        assert len(category.products) == 1
-        assert category.products[0].name == "Товар"
+        assert len(category._Category__products) == 1
+        assert category._Category__products[0].name == "Товар"
 
     def test_add_product_increments_counter(self):
         """add_product увеличивает счетчик product_count."""
@@ -137,12 +134,22 @@ class TestCategoryEncapsulation:
         with pytest.raises(TypeError):
             category.add_product("не продукт")
 
-    def test_get_products_string_format(self):
-        """get_products_string возвращает строку в правильном формате."""
+    def test_products_returns_string(self):
+        """Геттер products возвращает строку в правильном формате."""
         product = Product("Молоко", "Молочный продукт", 80.0, 15)
         category = Category("Продукты", "Еда", [product])
-        result = category.get_products_string()
+        result = category.products
+        assert isinstance(result, str)
         assert result == "Молоко, 80.0 руб. Остаток: 15 шт.\n"
+
+    def test_products_multiple_items(self):
+        """Геттер products корректно выводит несколько товаров."""
+        p1 = Product("Молоко", "Молочный продукт", 80.0, 15)
+        p2 = Product("Хлеб", "Хлебобулочное", 50.0, 10)
+        category = Category("Продукты", "Еда", [p1, p2])
+        result = category.products
+        assert "Молоко, 80.0 руб. Остаток: 15 шт." in result
+        assert "Хлеб, 50.0 руб. Остаток: 10 шт." in result
 
 
 class TestNewProduct:
