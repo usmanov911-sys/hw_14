@@ -44,7 +44,6 @@ class Product:
         existing_products: Optional[List['Product']] = None
     ) -> 'Product':
         """Создает продукт из словаря с проверкой дубликатов."""
-        # Проверка дубликатов
         if existing_products:
             for prod in existing_products:
                 if prod.name == product_data['name']:
@@ -60,19 +59,26 @@ class Product:
             quantity=product_data['quantity']
         )
 
+    def __str__(self) -> str:
+        """Строковое представление товара."""
+        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
+
     def __repr__(self) -> str:
         return (
             f"Product(name={self.name!r}, price={self.price}, quantity={self.quantity})"
         )
 
+    def __add__(self, other: 'Product') -> float:
+        """Сложение двух товаров: сумма произведений цены на количество."""
+        if not isinstance(other, Product):
+            raise TypeError(
+                f"Нельзя сложить Product с объектом типа {type(other).__name__}"
+            )
+        return self.price * self.quantity + other.price * other.quantity
+
 
 class Category:
-    """Категория товаров.
-
-    Класс-атрибуты:
-        category_count — общее количество созданных категорий.
-        product_count  — суммарное количество товаров во всех созданных категориях.
-    """
+    """Категория товаров."""
 
     category_count: int = 0
     product_count: int = 0
@@ -80,9 +86,8 @@ class Category:
     def __init__(self, name: str, description: str, products: List[Product]) -> None:
         self.name = name
         self.description = description
-        self.__products = list(products)  # Приватный атрибут списка товаров
+        self.__products = list(products)
 
-        # Автоматическое обновление счетчиков при инициализации
         Category.category_count += 1
         Category.product_count += len(self.__products)
 
@@ -98,13 +103,38 @@ class Category:
         """Геттер списка товаров в формате строки."""
         result = ""
         for product in self.__products:
-            result += f"{product.name}, {product.price} руб. Остаток: {product.quantity} шт.\n"
+            result += str(product) + "\n"
         return result
 
+    def __str__(self) -> str:
+        """Строковое представление категории с общим количеством товаров."""
+        total_quantity = sum(product.quantity for product in self.__products)
+        return f"{self.name}, количество продуктов: {total_quantity} шт."
+
+    def __repr__(self) -> str:
+        return f"Category(name={self.name!r}, products_count={len(self.__products)})"
+
+
+class CategoryIterator:
+    """Итератор для перебора товаров категории."""
+
+    def __init__(self, category: Category) -> None:
+        self._products = category._Category__products
+        self._index = 0
+
+    def __iter__(self) -> 'CategoryIterator':
+        return self
+
+    def __next__(self) -> Product:
+        if self._index >= len(self._products):
+            raise StopIteration
+        product = self._products[self._index]
+        self._index += 1
+        return product
 
 
 def load_products_from_json(file_path: str) -> List[Category]:
-    """Загружает категории и товары из JSON-файла и создает объекты классов."""
+    """Загружает категории и товары из JSON-файла."""
     with open(file_path, "r", encoding="utf-8") as file:
         data = json.load(file)
 
@@ -130,21 +160,29 @@ def load_products_from_json(file_path: str) -> List[Category]:
 
 
 if __name__ == "__main__":
-    # Пример локального запуска
-    p1 = Product("Смартфон", "Хороший телефон", 50000.0, 10)
-    cat1 = Category("Электроника", "Гаджеты", [p1])
-    print(f"Категорий: {Category.category_count}, Товаров: {Category.product_count}")
+    product1 = Product("Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 5)
+    product2 = Product("Iphone 15", "512GB, Gray space", 210000.0, 8)
+    product3 = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
 
-    # Тест добавления товара
-    p2 = Product("Ноутбук", "Мощный ноут", 100000.0, 5)
-    cat1.add_product(p2)
-    print(cat1.get_products_string())
+    print(str(product1))
+    print(str(product2))
+    print(str(product3))
 
-    # Тест класс-метода
-    new_p = Product.new_product({
-        "name": "Планшет",
-        "description": "Большой экран",
-        "price": 30000.0,
-        "quantity": 7
-    })
-    print(new_p)
+    category1 = Category(
+        "Смартфоны",
+        "Смартфоны, как средство не только коммуникации, но и получения дополнительных функций для удобства жизни",
+        [product1, product2, product3]
+    )
+
+    print(str(category1))
+
+    print(category1.products)
+
+    print(product1 + product2)
+    print(product1 + product3)
+    print(product2 + product3)
+
+    # Демонстрация работы итератора
+    print("\nПеребор товаров через итератор:")
+    for product in CategoryIterator(category1):
+        print(f"  - {product.name}")
