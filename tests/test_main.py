@@ -1,6 +1,14 @@
 import json
 import pytest
-from src.main import Product, Smartphone, LawnGrass, Category, CategoryIterator, load_products_from_json
+from src.main import (
+    BaseProduct,
+    Product,
+    Smartphone,
+    LawnGrass,
+    Category,
+    CategoryIterator,
+    load_products_from_json,
+)
 
 
 class TestProduct:
@@ -68,8 +76,6 @@ class TestJsonLoader:
 
 
 class TestProductEncapsulation:
-    """Тесты инкапсуляции класса Product."""
-
     def test_price_is_private(self):
         product = Product("Тест", "Описание", 100.0, 5)
         with pytest.raises(AttributeError):
@@ -91,14 +97,12 @@ class TestProductEncapsulation:
 
     def test_price_setter_accepts_positive(self, monkeypatch):
         product = Product("Тест", "Описание", 100.0, 5)
-        monkeypatch.setattr('builtins.input', lambda _: 'y')
+        monkeypatch.setattr("builtins.input", lambda _: "y")
         product.price = 200.0
         assert product.price == 200.0
 
 
 class TestCategoryEncapsulation:
-    """Тесты инкапсуляции класса Category."""
-
     def test_products_is_private(self):
         category = Category("Тест", "Описание", [])
         with pytest.raises(AttributeError):
@@ -132,14 +136,12 @@ class TestCategoryEncapsulation:
 
 
 class TestNewProduct:
-    """Тесты класс-метода new_product."""
-
     def test_new_product_creates_from_dict(self):
         data = {
             "name": "Товар",
             "description": "Описание",
             "price": 100.0,
-            "quantity": 5
+            "quantity": 5,
         }
         product = Product.new_product(data)
         assert product.name == "Товар"
@@ -152,7 +154,7 @@ class TestNewProduct:
             "name": "Товар",
             "description": "Описание",
             "price": 100.0,
-            "quantity": 3
+            "quantity": 3,
         }
         product = Product.new_product(data, existing)
         assert product.quantity == 8
@@ -164,7 +166,7 @@ class TestNewProduct:
             "name": "Товар",
             "description": "Описание",
             "price": 150.0,
-            "quantity": 3
+            "quantity": 3,
         }
         product = Product.new_product(data, existing)
         assert product.price == 150.0
@@ -175,23 +177,19 @@ class TestNewProduct:
             "name": "Товар",
             "description": "Описание",
             "price": 100.0,
-            "quantity": 3
+            "quantity": 3,
         }
         product = Product.new_product(data, existing)
         assert product.price == 200.0
 
 
 class TestProductStr:
-    """Тесты строкового представления Product."""
-
     def test_product_str(self):
         product = Product("Молоко", "Молочный продукт", 80.0, 15)
         assert str(product) == "Молоко, 80.0 руб. Остаток: 15 шт."
 
 
 class TestCategoryStr:
-    """Тесты строкового представления Category."""
-
     def test_category_str(self):
         p1 = Product("Молоко", "Молочный продукт", 80.0, 15)
         p2 = Product("Хлеб", "Хлебобулочное", 50.0, 10)
@@ -204,8 +202,6 @@ class TestCategoryStr:
 
 
 class TestProductAdd:
-    """Тесты магического метода __add__ для Product."""
-
     def test_product_add(self):
         p1 = Product("A", "Описание", 100.0, 10)
         p2 = Product("B", "Описание", 200.0, 2)
@@ -218,8 +214,6 @@ class TestProductAdd:
 
 
 class TestCategoryIterator:
-    """Тесты итератора для Category."""
-
     def test_iterator_basic(self):
         p1 = Product("A", "Описание", 100.0, 10)
         p2 = Product("B", "Описание", 200.0, 2)
@@ -228,18 +222,29 @@ class TestCategoryIterator:
         products = list(iterator)
         assert len(products) == 2
 
+    def test_iterator_empty_category(self):
+        category = Category("Пустая", "Описание", [])
+        iterator = CategoryIterator(category)
+        products = list(iterator)
+        assert len(products) == 0
 
-# ==========================================================
-# НОВЫЕ ТЕСТЫ ДЛЯ ДЗ 16.1 (НАСЛЕДОВАНИЕ)
-# ==========================================================
+    def test_iterator_in_for_loop(self):
+        p1 = Product("A", "Описание", 100.0, 10)
+        p2 = Product("B", "Описание", 200.0, 2)
+        p3 = Product("C", "Описание", 300.0, 3)
+        category = Category("Тест", "Описание", [p1, p2, p3])
+
+        names = []
+        for product in CategoryIterator(category):
+            names.append(product.name)
+
+        assert names == ["A", "B", "C"]
+
 
 class TestSmartphone:
-    """Тесты класса Smartphone."""
-
     def test_smartphone_initialization(self):
         smartphone = Smartphone(
-            "Samsung Galaxy S23", "Описание", 100000.0, 5,
-            95.5, "S23", 256, "Серый"
+            "Samsung Galaxy S23", "Описание", 100000.0, 5, 95.5, "S23", 256, "Серый"
         )
         assert smartphone.name == "Samsung Galaxy S23"
         assert smartphone.price == 100000.0
@@ -251,16 +256,15 @@ class TestSmartphone:
 
     def test_smartphone_inheritance(self):
         smartphone = Smartphone(
-            "Samsung", "Описание", 100000.0, 5,
-            95.5, "S23", 256, "Серый"
+            "Samsung", "Описание", 100000.0, 5, 95.5, "S23", 256, "Серый"
         )
         assert isinstance(smartphone, Product)
         assert isinstance(smartphone, Smartphone)
+        assert isinstance(smartphone, BaseProduct)
 
     def test_smartphone_add(self):
         s1 = Smartphone("A", "Описание", 100.0, 10, 95.0, "M1", 128, "Черный")
         s2 = Smartphone("B", "Описание", 200.0, 5, 90.0, "M2", 256, "Белый")
-        # 100 * 10 + 200 * 5 = 1000 + 1000 = 2000
         assert s1 + s2 == 2000.0
 
     def test_smartphone_add_type_error(self):
@@ -271,12 +275,9 @@ class TestSmartphone:
 
 
 class TestLawnGrass:
-    """Тесты класса LawnGrass."""
-
     def test_lawn_grass_initialization(self):
         grass = LawnGrass(
-            "Газонная трава", "Описание", 500.0, 20,
-            "Россия", "7 дней", "Зеленый"
+            "Газонная трава", "Описание", 500.0, 20, "Россия", "7 дней", "Зеленый"
         )
         assert grass.name == "Газонная трава"
         assert grass.price == 500.0
@@ -286,17 +287,14 @@ class TestLawnGrass:
         assert grass.color == "Зеленый"
 
     def test_lawn_grass_inheritance(self):
-        grass = LawnGrass(
-            "Трава", "Описание", 500.0, 20,
-            "Россия", "7 дней", "Зеленый"
-        )
+        grass = LawnGrass("Трава", "Описание", 500.0, 20, "Россия", "7 дней", "Зеленый")
         assert isinstance(grass, Product)
         assert isinstance(grass, LawnGrass)
+        assert isinstance(grass, BaseProduct)
 
     def test_lawn_grass_add(self):
         g1 = LawnGrass("A", "Описание", 100.0, 10, "Россия", "7 дней", "Зеленый")
         g2 = LawnGrass("B", "Описание", 200.0, 5, "США", "5 дней", "Темно-зеленый")
-        # 100 * 10 + 200 * 5 = 1000 + 1000 = 2000
         assert g1 + g2 == 2000.0
 
     def test_lawn_grass_add_type_error(self):
@@ -307,8 +305,6 @@ class TestLawnGrass:
 
 
 class TestAddProductRestrictions:
-    """Тесты ограничений на добавление продуктов в категорию."""
-
     def test_add_product_accepts_product(self):
         category = Category("Тест", "Описание", [])
         product = Product("Товар", "Описание", 100.0, 5)
@@ -318,18 +314,14 @@ class TestAddProductRestrictions:
     def test_add_product_accepts_smartphone(self):
         category = Category("Тест", "Описание", [])
         smartphone = Smartphone(
-            "Samsung", "Описание", 100000.0, 5,
-            95.5, "S23", 256, "Серый"
+            "Samsung", "Описание", 100000.0, 5, 95.5, "S23", 256, "Серый"
         )
         category.add_product(smartphone)
         assert len(category._Category__products) == 1
 
     def test_add_product_accepts_lawn_grass(self):
         category = Category("Тест", "Описание", [])
-        grass = LawnGrass(
-            "Трава", "Описание", 500.0, 20,
-            "Россия", "7 дней", "Зеленый"
-        )
+        grass = LawnGrass("Трава", "Описание", 500.0, 20, "Россия", "7 дней", "Зеленый")
         category.add_product(grass)
         assert len(category._Category__products) == 1
 
@@ -343,7 +335,136 @@ class TestAddProductRestrictions:
         with pytest.raises(TypeError):
             category.add_product({"name": "Товар"})
 
-    def test_add_product_rejects_number(self):
-        category = Category("Тест", "Описание", [])
+
+# ==========================================================
+# НОВЫЕ ТЕСТЫ ДЛЯ ДЗ 16.2 (АБСТРАКТНЫЕ КЛАССЫ И МИКСИНЫ)
+# ==========================================================
+
+
+class TestBaseProductAbstract:
+    """Тесты абстрактного класса BaseProduct."""
+
+    def test_cannot_instantiate_base_product(self):
+        """Нельзя создать экземпляр абстрактного класса."""
         with pytest.raises(TypeError):
-            category.add_product(123)
+            BaseProduct()
+
+    def test_product_is_subclass_of_base_product(self):
+        """Product является наследником BaseProduct."""
+        assert issubclass(Product, BaseProduct)
+
+    def test_smartphone_is_subclass_of_base_product(self):
+        """Smartphone является наследником BaseProduct через Product."""
+        assert issubclass(Smartphone, BaseProduct)
+
+    def test_lawn_grass_is_subclass_of_base_product(self):
+        """LawnGrass является наследником BaseProduct через Product."""
+        assert issubclass(LawnGrass, BaseProduct)
+
+    def test_product_instance_of_base_product(self):
+        """Экземпляр Product является экземпляром BaseProduct."""
+        product = Product("Test", "Desc", 100.0, 1)
+        assert isinstance(product, BaseProduct)
+
+    def test_smartphone_instance_of_base_product(self):
+        """Экземпляр Smartphone является экземпляром BaseProduct."""
+        smartphone = Smartphone("Test", "Desc", 100.0, 1, 90, "M1", 128, "Black")
+        assert isinstance(smartphone, BaseProduct)
+
+    def test_lawn_grass_instance_of_base_product(self):
+        """Экземпляр LawnGrass является экземпляром BaseProduct."""
+        grass = LawnGrass("Test", "Desc", 100.0, 1, "RU", "7 days", "Green")
+        assert isinstance(grass, BaseProduct)
+
+
+class TestReprMixin:
+    """Тесты миксина ReprMixin."""
+
+    def test_mixin_prints_on_product_creation(self, capsys):
+        """При создании Product миксин печатает информацию."""
+        Product("Test", "Desc", 100.0, 1)
+        captured = capsys.readouterr()
+        assert "Product(" in captured.out
+        assert "'Test'" in captured.out
+        assert "'Desc'" in captured.out
+        assert "100.0" in captured.out
+
+    def test_mixin_prints_on_smartphone_creation(self, capsys):
+        """При создании Smartphone миксин печатает информацию."""
+        Smartphone("Test", "Desc", 100.0, 1, 90.0, "M1", 128, "Black")
+        captured = capsys.readouterr()
+        assert "Smartphone(" in captured.out
+
+    def test_mixin_prints_on_lawn_grass_creation(self, capsys):
+        """При создании LawnGrass миксин печатает информацию."""
+        LawnGrass("Test", "Desc", 100.0, 1, "RU", "7 days", "Green")
+        captured = capsys.readouterr()
+        assert "LawnGrass(" in captured.out
+
+    def test_mixin_output_format(self, capsys):
+        """Проверка формата вывода миксина."""
+        Product("Товар", "Описание", 1200.0, 10)
+        captured = capsys.readouterr()
+        # Формат: ClassName(arg1, arg2, ...)
+        assert captured.out.startswith("Product(")
+        assert captured.out.strip().endswith(")")
+
+        class TestProductPriceSetterAdvanced:
+            """Дополнительные тесты сеттера цены."""
+
+            def test_price_setter_with_price_decrease_confirmed(self, monkeypatch):
+                """Сеттер принимает понижение цены при подтверждении 'y'."""
+                product = Product("Тест", "Описание", 100.0, 5)
+                # Мокаем input, чтобы возвращал 'y' (согласие)
+                monkeypatch.setattr("builtins.input", lambda _: "y")
+                product.price = 80.0
+                assert product.price == 80.0
+
+            def test_price_setter_with_price_decrease_cancelled(self, monkeypatch):
+                """Сеттер отменяет понижение цены при ответе 'n'."""
+                product = Product("Тест", "Описание", 100.0, 5)
+                # Мокаем input, чтобы возвращал 'n' (отмена)
+                monkeypatch.setattr("builtins.input", lambda _: "n")
+                product.price = 80.0
+                assert product.price == 100.0  # Цена не изменилась
+
+                class TestProductPriceSetterAdvanced:
+                    """Дополнительные тесты сеттера цены."""
+
+                    def test_price_setter_with_price_decrease_confirmed(
+                        self, monkeypatch
+                    ):
+                        """Сеттер принимает понижение цены при подтверждении 'y'."""
+                        product = Product("Тест", "Описание", 100.0, 5)
+                        # Мокаем input, чтобы возвращал 'y' (согласие)
+                        monkeypatch.setattr("builtins.input", lambda _: "y")
+                        product.price = 80.0
+                        assert product.price == 80.0
+
+                    def test_price_setter_with_price_decrease_cancelled(
+                        self, monkeypatch
+                    ):
+                        """Сеттер отменяет понижение цены при ответе 'n'."""
+                        product = Product("Тест", "Описание", 100.0, 5)
+                        # Мокаем input, чтобы возвращал 'n' (отмена)
+                        monkeypatch.setattr("builtins.input", lambda _: "n")
+                        product.price = 80.0
+                        assert product.price == 100.0  # Цена не изменилась
+
+
+class TestProductPriceSetterAdvanced:
+    """Дополнительные тесты сеттера цены для покрытия."""
+
+    def test_price_setter_with_price_decrease_confirmed(self, monkeypatch):
+        """Сеттер принимает понижение цены при подтверждении 'y'."""
+        product = Product("Тест", "Описание", 100.0, 5)
+        monkeypatch.setattr("builtins.input", lambda _: "y")
+        product.price = 80.0
+        assert product.price == 80.0
+
+    def test_price_setter_with_price_decrease_cancelled(self, monkeypatch):
+        """Сеттер отменяет понижение цены при ответе 'n'."""
+        product = Product("Тест", "Описание", 100.0, 5)
+        monkeypatch.setattr("builtins.input", lambda _: "n")
+        product.price = 80.0
+        assert product.price == 100.0
