@@ -8,6 +8,7 @@ from src.main import (
     Category,
     CategoryIterator,
     load_products_from_json,
+    ZeroQuantityError,
 )
 
 
@@ -336,52 +337,35 @@ class TestAddProductRestrictions:
             category.add_product({"name": "Товар"})
 
 
-# ==========================================================
-# НОВЫЕ ТЕСТЫ ДЛЯ ДЗ 16.2 (АБСТРАКТНЫЕ КЛАССЫ И МИКСИНЫ)
-# ==========================================================
-
-
 class TestBaseProductAbstract:
-    """Тесты абстрактного класса BaseProduct."""
-
     def test_cannot_instantiate_base_product(self):
-        """Нельзя создать экземпляр абстрактного класса."""
         with pytest.raises(TypeError):
             BaseProduct()
 
     def test_product_is_subclass_of_base_product(self):
-        """Product является наследником BaseProduct."""
         assert issubclass(Product, BaseProduct)
 
     def test_smartphone_is_subclass_of_base_product(self):
-        """Smartphone является наследником BaseProduct через Product."""
         assert issubclass(Smartphone, BaseProduct)
 
     def test_lawn_grass_is_subclass_of_base_product(self):
-        """LawnGrass является наследником BaseProduct через Product."""
         assert issubclass(LawnGrass, BaseProduct)
 
     def test_product_instance_of_base_product(self):
-        """Экземпляр Product является экземпляром BaseProduct."""
         product = Product("Test", "Desc", 100.0, 1)
         assert isinstance(product, BaseProduct)
 
     def test_smartphone_instance_of_base_product(self):
-        """Экземпляр Smartphone является экземпляром BaseProduct."""
         smartphone = Smartphone("Test", "Desc", 100.0, 1, 90, "M1", 128, "Black")
         assert isinstance(smartphone, BaseProduct)
 
     def test_lawn_grass_instance_of_base_product(self):
-        """Экземпляр LawnGrass является экземпляром BaseProduct."""
         grass = LawnGrass("Test", "Desc", 100.0, 1, "RU", "7 days", "Green")
         assert isinstance(grass, BaseProduct)
 
 
 class TestReprMixin:
-    """Тесты миксина ReprMixin."""
-
     def test_mixin_prints_on_product_creation(self, capsys):
-        """При создании Product миксин печатает информацию."""
         Product("Test", "Desc", 100.0, 1)
         captured = capsys.readouterr()
         assert "Product(" in captured.out
@@ -390,81 +374,109 @@ class TestReprMixin:
         assert "100.0" in captured.out
 
     def test_mixin_prints_on_smartphone_creation(self, capsys):
-        """При создании Smartphone миксин печатает информацию."""
         Smartphone("Test", "Desc", 100.0, 1, 90.0, "M1", 128, "Black")
         captured = capsys.readouterr()
         assert "Smartphone(" in captured.out
 
     def test_mixin_prints_on_lawn_grass_creation(self, capsys):
-        """При создании LawnGrass миксин печатает информацию."""
         LawnGrass("Test", "Desc", 100.0, 1, "RU", "7 days", "Green")
         captured = capsys.readouterr()
         assert "LawnGrass(" in captured.out
 
     def test_mixin_output_format(self, capsys):
-        """Проверка формата вывода миксина."""
         Product("Товар", "Описание", 1200.0, 10)
         captured = capsys.readouterr()
-        # Формат: ClassName(arg1, arg2, ...)
         assert captured.out.startswith("Product(")
         assert captured.out.strip().endswith(")")
 
-        class TestProductPriceSetterAdvanced:
-            """Дополнительные тесты сеттера цены."""
-
-            def test_price_setter_with_price_decrease_confirmed(self, monkeypatch):
-                """Сеттер принимает понижение цены при подтверждении 'y'."""
-                product = Product("Тест", "Описание", 100.0, 5)
-                # Мокаем input, чтобы возвращал 'y' (согласие)
-                monkeypatch.setattr("builtins.input", lambda _: "y")
-                product.price = 80.0
-                assert product.price == 80.0
-
-            def test_price_setter_with_price_decrease_cancelled(self, monkeypatch):
-                """Сеттер отменяет понижение цены при ответе 'n'."""
-                product = Product("Тест", "Описание", 100.0, 5)
-                # Мокаем input, чтобы возвращал 'n' (отмена)
-                monkeypatch.setattr("builtins.input", lambda _: "n")
-                product.price = 80.0
-                assert product.price == 100.0  # Цена не изменилась
-
-                class TestProductPriceSetterAdvanced:
-                    """Дополнительные тесты сеттера цены."""
-
-                    def test_price_setter_with_price_decrease_confirmed(
-                        self, monkeypatch
-                    ):
-                        """Сеттер принимает понижение цены при подтверждении 'y'."""
-                        product = Product("Тест", "Описание", 100.0, 5)
-                        # Мокаем input, чтобы возвращал 'y' (согласие)
-                        monkeypatch.setattr("builtins.input", lambda _: "y")
-                        product.price = 80.0
-                        assert product.price == 80.0
-
-                    def test_price_setter_with_price_decrease_cancelled(
-                        self, monkeypatch
-                    ):
-                        """Сеттер отменяет понижение цены при ответе 'n'."""
-                        product = Product("Тест", "Описание", 100.0, 5)
-                        # Мокаем input, чтобы возвращал 'n' (отмена)
-                        monkeypatch.setattr("builtins.input", lambda _: "n")
-                        product.price = 80.0
-                        assert product.price == 100.0  # Цена не изменилась
-
 
 class TestProductPriceSetterAdvanced:
-    """Дополнительные тесты сеттера цены для покрытия."""
-
     def test_price_setter_with_price_decrease_confirmed(self, monkeypatch):
-        """Сеттер принимает понижение цены при подтверждении 'y'."""
         product = Product("Тест", "Описание", 100.0, 5)
         monkeypatch.setattr("builtins.input", lambda _: "y")
         product.price = 80.0
         assert product.price == 80.0
 
     def test_price_setter_with_price_decrease_cancelled(self, monkeypatch):
-        """Сеттер отменяет понижение цены при ответе 'n'."""
         product = Product("Тест", "Описание", 100.0, 5)
         monkeypatch.setattr("builtins.input", lambda _: "n")
         product.price = 80.0
         assert product.price == 100.0
+
+
+# ==========================================================
+# НОВЫЕ ТЕСТЫ ДЛЯ ДЗ 17.1 (ИСКЛЮЧЕНИЯ)
+# ==========================================================
+
+
+class TestProductZeroQuantity:
+    """Тесты проверки нулевого количества при создании Product."""
+
+    def test_product_with_zero_quantity_raises_value_error(self):
+        """При создании товара с quantity=0 должно выбрасываться ValueError."""
+        with pytest.raises(ValueError) as exc_info:
+            Product("Товар", "Описание", 100.0, 0)
+        assert "Товар с нулевым количеством не может быть добавлен" in str(
+            exc_info.value
+        )
+
+    def test_product_with_positive_quantity_success(self):
+        """Товар с положительным количеством создаётся успешно."""
+        product = Product("Товар", "Описание", 100.0, 5)
+        assert product.quantity == 5
+
+    def test_smartphone_with_zero_quantity_raises_value_error(self):
+        """Smartphone с quantity=0 должен выбрасывать ValueError."""
+        with pytest.raises(ValueError):
+            Smartphone("Телефон", "Описание", 100.0, 0, 90.0, "M1", 128, "Черный")
+
+    def test_lawn_grass_with_zero_quantity_raises_value_error(self):
+        """LawnGrass с quantity=0 должен выбрасывать ValueError."""
+        with pytest.raises(ValueError):
+            LawnGrass("Трава", "Описание", 100.0, 0, "Россия", "7 дней", "Зеленый")
+
+
+class TestCategoryMiddlePrice:
+    """Тесты метода middle_price для Category."""
+
+    def test_middle_price_with_products(self):
+        """Средний ценник для категории с товарами."""
+        p1 = Product("A", "Описание", 100.0, 10)
+        p2 = Product("B", "Описание", 200.0, 5)
+        p3 = Product("C", "Описание", 300.0, 3)
+        category = Category("Тест", "Описание", [p1, p2, p3])
+        assert category.middle_price() == 200.0
+
+    def test_middle_price_empty_category(self):
+        """Средний ценник для пустой категории должен быть 0."""
+        category = Category("Пустая", "Без товаров", [])
+        assert category.middle_price() == 0.0
+
+    def test_middle_price_single_product(self):
+        """Средний ценник для категории с одним товаром."""
+        p = Product("A", "Описание", 150.0, 10)
+        category = Category("Тест", "Описание", [p])
+        assert category.middle_price() == 150.0
+
+    def test_middle_price_with_smartphones(self):
+        """Средний ценник для категории со смартфонами."""
+        s1 = Smartphone("A", "Описание", 100.0, 10, 90.0, "M1", 128, "Черный")
+        s2 = Smartphone("B", "Описание", 200.0, 5, 95.0, "M2", 256, "Белый")
+        category = Category("Смартфоны", "Описание", [s1, s2])
+        assert category.middle_price() == 150.0
+
+
+class TestZeroQuantityError:
+    """Тесты пользовательского исключения ZeroQuantityError."""
+
+    def test_zero_quantity_error_is_exception(self):
+        """ZeroQuantityError является наследником Exception."""
+        assert issubclass(ZeroQuantityError, Exception)
+
+    def test_zero_quantity_error_message(self):
+        """ZeroQuantityError содержит правильное сообщение."""
+        with pytest.raises(ZeroQuantityError) as exc_info:
+            raise ZeroQuantityError(
+                "Товар с нулевым количеством не может быть добавлен в категорию"
+            )
+        assert "нулевым количеством" in str(exc_info.value)
