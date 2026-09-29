@@ -1,8 +1,24 @@
-"""Ядро интернет-магазина: абстрактные классы, миксины и наследование."""
+"""Ядро интернет-магазина: абстрактные классы, миксины, наследование и обработка исключений."""
 
 import json
 from abc import ABC, abstractmethod
 from typing import List, Optional
+
+
+# ==========================================================
+# ПОЛЬЗОВАТЕЛЬСКИЕ ИСКЛЮЧЕНИЯ (доп. задание)
+# ==========================================================
+
+
+class ZeroQuantityError(Exception):
+    """Пользовательское исключение для товара с нулевым количеством."""
+
+    pass
+
+
+# ==========================================================
+# АБСТРАКТНЫЕ КЛАССЫ И МИКСИНЫ
+# ==========================================================
 
 
 class BaseProduct(ABC):
@@ -35,11 +51,14 @@ class ReprMixin:
     """Миксин для вывода информации о создании объекта."""
 
     def __init__(self, *args, **kwargs):
-        # Формируем строку с аргументами
         args_repr = ", ".join(repr(arg) for arg in args)
         print(f"{self.__class__.__name__}({args_repr})")
-        # Не передаём аргументы дальше, так как object.__init__() их не принимает
         super().__init__()
+
+
+# ==========================================================
+# КЛАССЫ ПРОДУКТОВ
+# ==========================================================
 
 
 class Product(ReprMixin, BaseProduct):
@@ -48,6 +67,10 @@ class Product(ReprMixin, BaseProduct):
     def __init__(
         self, name: str, description: str, price: float, quantity: int
     ) -> None:
+        # Задание 1: Проверка на нулевое количество
+        if quantity == 0:
+            raise ValueError("Товар с нулевым количеством не может быть добавлен")
+
         # Вызываем миксин для печати информации
         ReprMixin.__init__(self, name, description, price, quantity)
 
@@ -157,6 +180,11 @@ class LawnGrass(Product):
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
 
+# ==========================================================
+# КЛАСС КАТЕГОРИИ
+# ==========================================================
+
+
 class Category:
     """Категория товаров."""
 
@@ -177,8 +205,20 @@ class Category:
                 f"Можно добавлять только объекты класса Product или его наследников, "
                 f"получен тип: {type(product).__name__}"
             )
-        self.__products.append(product)
-        Category.product_count += 1
+
+        # Дополнительное задание: обработка нулевого количества
+        try:
+            if product.quantity == 0:
+                raise ZeroQuantityError(
+                    "Товар с нулевым количеством не может быть добавлен в категорию"
+                )
+            self.__products.append(product)
+            Category.product_count += 1
+            print(f"Товар '{product.name}' успешно добавлен в категорию")
+        except ZeroQuantityError as e:
+            print(f"Ошибка: {e}")
+        finally:
+            print("Обработка добавления товара завершена")
 
     @property
     def products(self) -> str:
@@ -188,6 +228,18 @@ class Category:
             result += str(product) + "\n"
         return result
 
+    def middle_price(self) -> float:
+        """
+        Задание 2: Подсчёт среднего ценника всех товаров в категории.
+        Если товаров нет — возвращает 0.
+        """
+        try:
+            total_price = sum(product.price for product in self.__products)
+            average = total_price / len(self.__products)
+            return average
+        except ZeroDivisionError:
+            return 0.0
+
     def __str__(self) -> str:
         """Строковое представление категории."""
         total_quantity = sum(product.quantity for product in self.__products)
@@ -195,6 +247,11 @@ class Category:
 
     def __repr__(self) -> str:
         return f"Category(name={self.name!r}, products_count={len(self.__products)})"
+
+
+# ==========================================================
+# ИТЕРАТОР И ЗАГРУЗКА ИЗ JSON
+# ==========================================================
 
 
 class CategoryIterator:
@@ -240,51 +297,33 @@ def load_products_from_json(file_path: str) -> List[Category]:
     return categories
 
 
+# ==========================================================
+# ПРИМЕР ИСПОЛЬЗОВАНИЯ
+# ==========================================================
+
 if __name__ == "__main__":
+    try:
+        product_invalid = Product("Бракованный товар", "Неверное количество", 1000.0, 0)
+    except ValueError as e:
+        print(
+            "Возникла ошибка ValueError прерывающая работу программы при попытке добавить продукт с нулевым количеством"
+        )
+    else:
+        print(
+            "Не возникла ошибка ValueError при попытке добавить продукт с нулевым количеством"
+        )
+
     product1 = Product(
         "Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 5
     )
     product2 = Product("Iphone 15", "512GB, Gray space", 210000.0, 8)
     product3 = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
 
-    print(product1.name)
-    print(product1.description)
-    print(product1.price)
-    print(product1.quantity)
-
-    print(product2.name)
-    print(product2.description)
-    print(product2.price)
-    print(product2.quantity)
-
-    print(product3.name)
-    print(product3.description)
-    print(product3.price)
-    print(product3.quantity)
-
     category1 = Category(
-        "Смартфоны",
-        "Смартфоны, как средство не только коммуникации, но и получения дополнительных функций для удобства жизни",
-        [product1, product2, product3],
+        "Смартфоны", "Категория смартфонов", [product1, product2, product3]
     )
 
-    print(category1.name == "Смартфоны")
-    print(category1.description)
-    print(len(category1._Category__products))
-    print(category1.category_count)
-    print(category1.product_count)
+    print(category1.middle_price())
 
-    product4 = Product('55" QLED 4K', "Фоновая подсветка", 123000.0, 7)
-    category2 = Category(
-        "Телевизоры",
-        "Современный телевизор, который позволяет наслаждаться просмотром, станет вашим другом и помощником",
-        [product4],
-    )
-
-    print(category2.name)
-    print(category2.description)
-    print(len(category2._Category__products))
-    print(category2.products)
-
-    print(Category.category_count)
-    print(Category.product_count)
+    category_empty = Category("Пустая категория", "Категория без продуктов", [])
+    print(category_empty.middle_price())
